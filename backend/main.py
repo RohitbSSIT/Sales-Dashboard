@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from bson import ObjectId
-from database import leads_collection, customers_collection
+from database import leads_collection, customers_collection, opportunities_collection
 
 app = FastAPI()
 app.add_middleware(
@@ -36,6 +36,18 @@ class Customer(BaseModel):
     service: str
     totalValue: str
     status: str
+    assignedTo: str
+    notes: str
+
+
+class Opportunity(BaseModel):
+    opportunityName: str
+    customer: str
+    service: str
+    value: str
+    stage: str
+    probability: str
+    expectedCloseDate: str
     assignedTo: str
     notes: str
 
@@ -123,3 +135,44 @@ def delete_customer(customer_id: str):
     result = customers_collection.delete_one({"_id": ObjectId(customer_id)})
 
     return {"message": "Customer deleted successfully"}
+
+
+@app.post("/opportunities")
+def create_opportunity(opportunity: Opportunity):
+
+    opportunity_data = opportunity.model_dump()
+
+    result = opportunities_collection.insert_one(opportunity_data)
+
+    return {"message": "Opportunity saved successfully", "id": str(result.inserted_id)}
+
+
+@app.get("/opportunities")
+def get_opportunities():
+
+    opportunities = list(opportunities_collection.find())
+
+    for opportunity in opportunities:
+        opportunity["_id"] = str(opportunity["_id"])
+
+    return opportunities
+
+
+@app.put("/opportunities/{opportunity_id}")
+def update_opportunity(opportunity_id: str, opportunity: Opportunity):
+
+    opportunity_data = opportunity.model_dump()
+
+    result = opportunities_collection.update_one(
+        {"_id": ObjectId(opportunity_id)}, {"$set": opportunity_data}
+    )
+
+    return {"message": "Opportunity updated successfully"}
+
+
+@app.delete("/opportunities/{opportunity_id}")
+def delete_opportunity(opportunity_id: str):
+
+    result = opportunities_collection.delete_one({"_id": ObjectId(opportunity_id)})
+
+    return {"message": "Opportunity deleted successfully"}
