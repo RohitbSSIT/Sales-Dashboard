@@ -5,12 +5,14 @@ import LeadsFilters from "../components/leads/LeadsFilters";
 import LeadsTable from "../components/leads/LeadsTable";
 import LeadModal from "../components/leads/LeadModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
+import LeadDetailsModal from "../components/leads/LeadDetailsModal";
 
 function Leads() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [refresh, setRefresh] = useState(false);
   const [deleteLead, setDeleteLead] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
@@ -19,6 +21,11 @@ function Leads() {
   const handleEditLead = (lead) => {
     setSelectedLead(lead);
     setIsModalOpen(true);
+  };
+
+  const handleViewLead = (lead) => {
+    setSelectedLead(lead);
+    setIsDetailsOpen(true);
   };
 
   return (
@@ -43,11 +50,12 @@ function Leads() {
         refresh={refresh}
         onEdit={handleEditLead}
         onDelete={(lead) => setDeleteLead(lead)}
+        onView={handleViewLead}
         search={search}
         status={status}
         source={source}
       />
-      
+
       {deleteLead && (
         <ConfirmDialog
           onCancel={() => setDeleteLead(null)}
@@ -73,6 +81,16 @@ function Leads() {
           lead={selectedLead}
           onClose={() => setIsModalOpen(false)}
           onLeadAdded={() => setRefresh(!refresh)}
+        />
+      )}
+
+      {isDetailsOpen && (
+        <LeadDetailsModal
+          lead={selectedLead}
+          onClose={() => {
+            setIsDetailsOpen(false);
+            setSelectedLead(null);
+          }}
         />
       )}
     </div>
