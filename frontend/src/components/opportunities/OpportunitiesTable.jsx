@@ -2,6 +2,7 @@ function OpportunitiesTable({
   opportunities,
   onEdit,
   onDelete,
+  onView,
   stage,
   search,
 }) {
@@ -12,7 +13,7 @@ function OpportunitiesTable({
       opportunity.opportunityName.toLowerCase().includes(searchText) ||
       opportunity.customer.toLowerCase().includes(searchText) ||
       opportunity.service.toLowerCase().includes(searchText) ||
-      opportunity.value.toLowerCase().includes(searchText);
+      String(opportunity.value).includes(searchText);
 
     const matchesStage = stage === "" || opportunity.stage === stage;
 
@@ -22,7 +23,7 @@ function OpportunitiesTable({
   return (
     <div className="overflow-hidden rounded-lg bg-white shadow-sm">
       <div className="w-full overflow-x-auto">
-        <table className="w-full min-w-225">
+        <table className="w-full min-w-300">
           {/* Table Header */}
           <thead className="bg-gray-50">
             <tr>
@@ -39,11 +40,7 @@ function OpportunitiesTable({
               </th>
 
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
-                Value
-              </th>
-
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
-                Stage
+                Estimated Value
               </th>
 
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
@@ -51,11 +48,19 @@ function OpportunitiesTable({
               </th>
 
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
-                Close Date
+                Expected Revenue
               </th>
 
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
-                Assigned To
+                Closing Date
+              </th>
+
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
+                Stage
+              </th>
+
+              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
+                Salesperson
               </th>
 
               <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600 sm:px-6">
@@ -68,7 +73,10 @@ function OpportunitiesTable({
           <tbody className="divide-y divide-gray-200">
             {filteredOpportunities.length === 0 ? (
               <tr>
-                <td colSpan="9" className="px-6 py-8 text-center text-gray-500">
+                <td
+                  colSpan="10"
+                  className="px-6 py-8 text-center text-gray-500"
+                >
                   No opportunities found
                 </td>
               </tr>
@@ -90,14 +98,9 @@ function OpportunitiesTable({
                     {opportunity.service}
                   </td>
 
-                  {/* Value */}
+                  {/* Estimated Value */}
                   <td className="px-4 py-4 text-sm text-gray-600 sm:px-6">
-                    ₹{opportunity.value}
-                  </td>
-
-                  {/* Stage */}
-                  <td className="px-4 py-4 text-sm text-gray-600 sm:px-6">
-                    {opportunity.stage}
+                    ₹{Number(opportunity.value).toLocaleString("en-IN")}
                   </td>
 
                   {/* Probability */}
@@ -105,31 +108,53 @@ function OpportunitiesTable({
                     {opportunity.probability}%
                   </td>
 
-                  {/* Expected Close Date */}
+                  {/* Expected Revenue */}
+                  <td className="px-4 py-4 text-sm font-medium text-gray-800 sm:px-6">
+                    ₹
+                    {Number(opportunity.expectedRevenue).toLocaleString(
+                      "en-IN",
+                    )}
+                  </td>
+
+                  {/* Closing Date */}
                   <td className="px-4 py-4 text-sm text-gray-600 sm:px-6">
                     {opportunity.expectedCloseDate}
                   </td>
 
-                  {/* Assigned To */}
+                  {/* Stage */}
+                  <td className="px-4 py-4 text-sm text-gray-600 sm:px-6">
+                    {opportunity.stage}
+                  </td>
+
+                  {/* Salesperson */}
                   <td className="px-4 py-4 text-sm text-gray-600 sm:px-6">
                     {opportunity.assignedTo}
                   </td>
 
                   {/* Actions */}
-                  <td className="px-4 py-4 sm:px-6">
-                    <button
-                      onClick={() => onEdit(opportunity)}
-                      className="cursor-pointer text-sm font-medium text-blue-600 hover:text-blue-800"
-                    >
-                      Edit
-                    </button>
+                  <td className="px-6 py-4">
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => onView(opportunity)}
+                        className="rounded-lg bg-blue-100 px-3 py-1 text-sm text-blue-600 hover:bg-blue-200"
+                      >
+                        View
+                      </button>
 
-                    <button
-                      onClick={() => onDelete(opportunity)}
-                      className="ml-3 cursor-pointer text-sm font-medium text-red-600 hover:text-red-800"
-                    >
-                      Delete
-                    </button>
+                      <button
+                        onClick={() => onEdit(opportunity)}
+                        className="rounded-lg bg-yellow-100 px-3 py-1 text-sm text-yellow-600 hover:bg-yellow-200"
+                      >
+                        Edit
+                      </button>
+
+                      <button
+                        onClick={() => onDelete(opportunity)}
+                        className="rounded-lg bg-red-100 px-3 py-1 text-sm text-red-600 hover:bg-red-200"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

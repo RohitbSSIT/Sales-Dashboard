@@ -48,9 +48,10 @@ class Opportunity(BaseModel):
     opportunityName: str
     customer: str
     service: str
-    value: str
+    value: float
     stage: str
-    probability: str
+    probability: float
+    expectedRevenue: float
     expectedCloseDate: str
     assignedTo: str
     notes: str
