@@ -5,6 +5,7 @@ import OpportunitiesFilters from "../components/opportunities/OpportunitiesFilte
 import OpportunitiesTable from "../components/opportunities/OpportunitiesTable";
 import OpportunityModal from "../components/opportunities/OpportunityModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
+import OpportunityDetailsModal from "../components/opportunities/OpportunityDetailsModal";
 
 function Opportunities() {
   const [search, setSearch] = useState("");
@@ -19,6 +20,13 @@ function Opportunities() {
   // Delete states
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [opportunityToDelete, setOpportunityToDelete] = useState(null);
+
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+
+  const handleViewOpportunity = (opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setIsDetailsOpen(true);
+  };
 
   // GET Opportunities
   const fetchOpportunities = async () => {
@@ -94,10 +102,11 @@ function Opportunities() {
 
       <OpportunitiesTable
         opportunities={opportunities}
-        search={search}
-        stage={stage}
         onEdit={handleEditOpportunity}
         onDelete={handleDeleteClick}
+        onView={handleViewOpportunity}
+        stage={stage}
+        search={search}
       />
 
       {/* Add / Edit Modal */}
@@ -109,6 +118,16 @@ function Opportunities() {
             setSelectedOpportunity(null);
           }}
           onOpportunityAdded={fetchOpportunities}
+        />
+      )}
+
+      {isDetailsOpen && (
+        <OpportunityDetailsModal
+          opportunity={selectedOpportunity}
+          onClose={() => {
+            setIsDetailsOpen(false);
+            setSelectedOpportunity(null);
+          }}
         />
       )}
 

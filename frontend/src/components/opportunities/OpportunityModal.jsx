@@ -1,6 +1,11 @@
+
 import { useEffect, useState } from "react";
 
-function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
+function OpportunityModal({
+  opportunity,
+  onClose,
+  onOpportunityAdded,
+}) {
   const [formData, setFormData] = useState({
     opportunityName: "",
     customer: "",
@@ -8,6 +13,7 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
     value: "",
     stage: "Qualification",
     probability: "",
+    expectedRevenue: "",
     expectedCloseDate: "",
     assignedTo: "",
     notes: "",
@@ -23,13 +29,28 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
         value: opportunity.value || "",
         stage: opportunity.stage || "Qualification",
         probability: opportunity.probability || "",
+        expectedRevenue: opportunity.expectedRevenue || "",
         expectedCloseDate: opportunity.expectedCloseDate || "",
         assignedTo: opportunity.assignedTo || "",
         notes: opportunity.notes || "",
       });
+    } else {
+      setFormData({
+        opportunityName: "",
+        customer: "",
+        service: "",
+        value: "",
+        stage: "Qualification",
+        probability: "",
+        expectedRevenue: "",
+        expectedCloseDate: "",
+        assignedTo: "",
+        notes: "",
+      });
     }
   }, [opportunity]);
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -37,10 +58,34 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
     });
   };
 
+  // Calculate expected revenue
+  const calculateExpectedRevenue = () => {
+    const value = Number(formData.value);
+    const probability = Number(formData.probability);
+
+    if (!value || !probability) {
+      return 0;
+    }
+
+    return (value * probability) / 100;
+  };
+
+  // Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
+      // Calculate expected revenue
+      const expectedRevenue = calculateExpectedRevenue();
+
+      // Data that will be sent to FastAPI
+      const opportunityData = {
+        ...formData,
+        value: Number(formData.value),
+        probability: Number(formData.probability),
+        expectedRevenue: expectedRevenue,
+      };
+
       let response;
 
       // EDIT
@@ -52,20 +97,23 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(formData),
-          },
+            body: JSON.stringify(opportunityData),
+          }
         );
       }
 
       // ADD
       else {
-        response = await fetch("http://127.0.0.1:8000/opportunities", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        });
+        response = await fetch(
+          "http://127.0.0.1:8000/opportunities",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(opportunityData),
+          }
+        );
       }
 
       if (!response.ok) {
@@ -76,6 +124,13 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
 
       console.log(data);
 
+      // Success message
+      alert(
+        opportunity
+          ? "Opportunity updated successfully!"
+          : "Opportunity saved successfully!"
+      );
+
       // Refresh table
       onOpportunityAdded();
 
@@ -83,16 +138,21 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
       onClose();
     } catch (error) {
       console.error("Error saving opportunity:", error);
+
+      alert("Something went wrong!");
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-lg bg-white p-6 shadow-xl">
+      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-800">
-            {opportunity ? "Edit Opportunity" : "Add Opportunity"}
+            {opportunity
+              ? "Edit Opportunity"
+              : "Add Opportunity"}
           </h2>
 
           <button
@@ -104,10 +164,12 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
           </button>
         </div>
 
+        {/* Form */}
         <form
           onSubmit={handleSubmit}
           className="grid grid-cols-1 gap-4 sm:grid-cols-2"
         >
+
           {/* Opportunity Name */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -153,22 +215,37 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
               className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
             >
               <option value="">Select service</option>
-              <option value="Web Development">Web Development</option>
-              <option value="Mobile Development">Mobile Development</option>
-              <option value="UI/UX Design">UI/UX Design</option>
-              <option value="Software Development">Software Development</option>
-              <option value="Cloud Services">Cloud Services</option>
+              <option value="Website Development">
+                Website Development
+              </option>
+              <option value="E-commerce Website">
+                E-commerce Website
+              </option>
+              <option value="Mobile Development">
+                Mobile Development
+              </option>
+              <option value="UI/UX Design">
+                UI/UX Design
+              </option>
+              <option value="Software Development">
+                Software Development
+              </option>
+              <option value="Cloud Services">
+                Cloud Services
+              </option>
               <option value="Maintenance & Support">
                 Maintenance & Support
               </option>
-              <option value="Digital Marketing">Digital Marketing</option>
+              <option value="Digital Marketing">
+                Digital Marketing
+              </option>
             </select>
           </div>
 
-          {/* Value */}
+          {/* Estimated Value */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Value
+              Estimated Value
             </label>
 
             <input
@@ -176,33 +253,10 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
               name="value"
               value={formData.value}
               onChange={handleChange}
-              placeholder="Enter opportunity value"
+              placeholder="Enter estimated value"
+              min="0"
               className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
             />
-          </div>
-
-          {/* Stage */}
-          <div>
-            <label className="mb-1 block text-sm font-medium text-gray-700">
-              Stage
-            </label>
-
-            <select
-              name="stage"
-              value={formData.stage}
-              onChange={handleChange}
-              className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
-            >
-              <option value="Qualification">Qualification</option>
-
-              <option value="Proposal">Proposal</option>
-
-              <option value="Negotiation">Negotiation</option>
-
-              <option value="Won">Won</option>
-
-              <option value="Lost">Lost</option>
-            </select>
           </div>
 
           {/* Probability */}
@@ -223,6 +277,58 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
             />
           </div>
 
+          {/* Expected Revenue */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Expected Revenue
+            </label>
+
+            <input
+              type="text"
+              value={
+                calculateExpectedRevenue()
+                  ? `₹${calculateExpectedRevenue().toLocaleString("en-IN")}`
+                  : "₹0"
+              }
+              readOnly
+              className="w-full cursor-not-allowed rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-gray-700 outline-none"
+            />
+          </div>
+
+          {/* Stage */}
+          <div>
+            <label className="mb-1 block text-sm font-medium text-gray-700">
+              Stage
+            </label>
+
+            <select
+              name="stage"
+              value={formData.stage}
+              onChange={handleChange}
+              className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
+            >
+              <option value="Qualification">
+                Qualification
+              </option>
+
+              <option value="Proposal">
+                Proposal
+              </option>
+
+              <option value="Negotiation">
+                Negotiation
+              </option>
+
+              <option value="Won">
+                Won
+              </option>
+
+              <option value="Lost">
+                Lost
+              </option>
+            </select>
+          </div>
+
           {/* Expected Close Date */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -241,7 +347,7 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
           {/* Assigned To */}
           <div>
             <label className="mb-1 block text-sm font-medium text-gray-700">
-              Assigned To
+              Salesperson
             </label>
 
             <input
@@ -272,6 +378,7 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
 
           {/* Buttons */}
           <div className="mt-2 flex justify-end gap-3 sm:col-span-2">
+
             <button
               type="button"
               onClick={onClose}
@@ -284,8 +391,11 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
               type="submit"
               className="cursor-pointer rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
             >
-              {opportunity ? "Update Opportunity" : "Save Opportunity"}
+              {opportunity
+                ? "Update Opportunity"
+                : "Save Opportunity"}
             </button>
+
           </div>
         </form>
       </div>
@@ -294,3 +404,4 @@ function OpportunityModal({ opportunity, onClose, onOpportunityAdded }) {
 }
 
 export default OpportunityModal;
+
