@@ -1,4 +1,3 @@
-
 function LeadsFilters({
   search,
   setSearch,
@@ -9,47 +8,48 @@ function LeadsFilters({
 }) {
   return (
     <div className="mb-6 rounded-lg bg-white p-4 shadow-sm">
-      <div className="flex gap-4">
+      
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        
         {/* Search */}
         <input
           type="text"
           placeholder="Search leads..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="flex-1 rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
         />
-
         {/* Status */}
         <select
           value={status}
           onChange={(e) => setStatus(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
         >
-          <option value="">All Status</option>
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="qualified">Qualified</option>
-          <option value="proposal">Proposal</option>
-          <option value="won">Won</option>
-          <option value="lost">Lost</option>
+          
+          <option value="">All Status</option> <option value="New">New</option>
+          <option value="Contacted">Contacted</option>
+          <option value="Qualified">Qualified</option>
+          <option value="Proposal">Proposal</option>
+          <option value="Won">Won</option>
+          <option value="Lost">Lost</option>
         </select>
-
-        {/* Source */}
+        {/* Lead Source */}
         <select
           value={source}
           onChange={(e) => setSource(e.target.value)}
-          className="rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
         >
+          
           <option value="">All Sources</option>
-          <option value="website">Website</option>
-          <option value="google">Google</option>
-          <option value="facebook">Facebook</option>
-          <option value="linkedin">LinkedIn</option>
-          <option value="referral">Referral</option>
+          <option value="Google">Google</option>
+          <option value="Referral">Referral</option>
+          <option value="LinkedIn">LinkedIn</option>
+          <option value="Website">Website</option>
         </select>
       </div>
     </div>
   );
 }
+
 
 export default LeadsFilters;
