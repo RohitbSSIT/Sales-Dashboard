@@ -2,7 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from bson import ObjectId
-from database import leads_collection, customers_collection, opportunities_collection
+from database import (
+    leads_collection,
+    customers_collection,
+    opportunities_collection,
+    proposals_collection,
+)
 
 app = FastAPI()
 app.add_middleware(
@@ -53,6 +58,19 @@ class Opportunity(BaseModel):
     probability: float
     expectedRevenue: float
     expectedCloseDate: str
+    assignedTo: str
+    notes: str
+
+
+class Proposal(BaseModel):
+    proposalName: str
+    customer: str
+    opportunity: str
+    service: str
+    amount: float
+    proposalDate: str
+    validUntil: str
+    status: str
     assignedTo: str
     notes: str
 
@@ -181,3 +199,49 @@ def delete_opportunity(opportunity_id: str):
     result = opportunities_collection.delete_one({"_id": ObjectId(opportunity_id)})
 
     return {"message": "Opportunity deleted successfully"}
+
+
+@app.post("/proposals")
+def create_proposal(proposal: Proposal):
+    proposal_data = proposal.model_dump()
+
+    result = proposals_collection.insert_one(proposal_data)
+
+    return {
+        "message": "Proposal saved successfully",
+        "id": str(result.inserted_id),
+    }
+
+
+@app.get("/proposals")
+def get_proposals():
+    proposals = list(proposals_collection.find())
+
+    for proposal in proposals:
+        proposal["_id"] = str(proposal["_id"])
+
+    return proposals
+
+
+@app.put("/proposals/{proposal_id}")
+def update_proposal(
+    proposal_id: str,
+    proposal: Proposal,
+):
+
+    proposal_data = proposal.model_dump()
+
+    proposals_collection.update_one(
+        {"_id": ObjectId(proposal_id)},
+        {"$set": proposal_data},
+    )
+
+    return {"message": "Proposal updated successfully"}
+
+
+@app.delete("/proposals/{proposal_id}")
+def delete_proposal(proposal_id: str):
+    
+    proposals_collection.delete_one({"_id": ObjectId(proposal_id)})
+   
+    return {"message": "Proposal deleted successfully"}
