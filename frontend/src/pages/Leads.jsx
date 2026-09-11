@@ -47,6 +47,7 @@ function Leads() {
         status={status}
         source={source}
       />
+      
       {deleteLead && (
         <ConfirmDialog
           onCancel={() => setDeleteLead(null)}

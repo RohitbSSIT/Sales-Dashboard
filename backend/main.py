@@ -19,13 +19,17 @@ app.add_middleware(
 
 class Lead(BaseModel):
     leadName: str
-    company: str
+    contactPerson: str
     email: str
     phone: str
+    company: str
     service: str
     budget: str
+    leadSource: str
     status: str
-    source: str
+    assignedTo: str
+    nextFollowUp: str
+    notes: str
 
 
 class Customer(BaseModel):
