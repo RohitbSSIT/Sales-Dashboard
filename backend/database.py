@@ -16,4 +16,6 @@ customers_collection = db["customers"]
 
 opportunities_collection = db["opportunities"]
 
+proposals_collection = db["proposals"]
+
 print("MongoDB connected successfully")

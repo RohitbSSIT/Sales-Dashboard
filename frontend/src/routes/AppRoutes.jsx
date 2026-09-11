@@ -3,6 +3,7 @@ import Dashboard from "../pages/Dashboard";
 import Leads from "../pages/Leads";
 import Customers from "../pages/Customers";
 import Opportunities from "../pages/Opportunities";
+import Proposals from "../pages/Proposals";
 
 function AppRoutes() {
   return (
@@ -11,6 +12,7 @@ function AppRoutes() {
       <Route path="/leads" element={<Leads />} />
       <Route path="/customers" element={<Customers />} />
       <Route path="/opportunities" element={<Opportunities />} />
+      <Route path="/proposals" element={<Proposals />} />
     </Routes>
   );
 }
