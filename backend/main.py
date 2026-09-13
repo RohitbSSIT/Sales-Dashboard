@@ -7,6 +7,7 @@ from database import (
     customers_collection,
     opportunities_collection,
     proposals_collection,
+    sales_collection,
 )
 
 app = FastAPI()
@@ -71,6 +72,20 @@ class Proposal(BaseModel):
     proposalDate: str
     validUntil: str
     status: str
+    assignedTo: str
+    notes: str
+
+
+class Sale(BaseModel):
+    saleName: str
+    customer: str
+    opportunity: str
+    proposal: str
+    service: str
+    saleAmount: float
+    saleDate: str
+    paymentStatus: str
+    paymentMethod: str
     assignedTo: str
     notes: str
 
@@ -241,7 +256,53 @@ def update_proposal(
 
 @app.delete("/proposals/{proposal_id}")
 def delete_proposal(proposal_id: str):
-    
+
     proposals_collection.delete_one({"_id": ObjectId(proposal_id)})
-   
+
     return {"message": "Proposal deleted successfully"}
+
+
+@app.post("/sales")
+def create_sale(sale: Sale):
+    sale_data = sale.model_dump()
+
+    result = sales_collection.insert_one(sale_data)
+
+    return {
+        "message": "sale saved successfully",
+        "id": str(result.inserted_id),
+    }
+
+
+@app.get("/sales")
+def get_sales():
+    sales = list(sales_collection.find())
+
+    for sale in sales:
+        sale["_id"] = str(sale["_id"])
+
+    return sales
+
+
+@app.put("/sales/{sale_id}")
+def update_sale(
+    sale_id: str,
+    sale: Sale,
+):
+
+    sale_data = sale.model_dump()
+
+    sales_collection.update_one(
+        {"_id": ObjectId(sale_id)},
+        {"$set": sale_data},
+    )
+
+    return {"message": "Sale updated successfully"}
+
+
+@app.delete("/sales/{sale_id}")
+def delete_sale(sale_id: str):
+
+    sales_collection.delete_one({"_id": ObjectId(sale_id)})
+
+    return {"message": "Sale deleted successfully"}
