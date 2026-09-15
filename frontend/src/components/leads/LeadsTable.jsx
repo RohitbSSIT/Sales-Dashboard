@@ -8,6 +8,7 @@ function LeadsTable({
   search,
   status,
   source,
+  onConvert,
 }) {
   const [leads, setLeads] = useState([]);
 
@@ -156,6 +157,14 @@ function LeadsTable({
                         className="cursor-pointer rounded-lg bg-yellow-100 px-3 py-1 text-sm text-yellow-600 transition hover:bg-yellow-200"
                       >
                         Edit
+                      </button>
+
+                      <button
+                        onClick={() => onConvert(lead._id)}
+                        disabled={lead.converted}
+                        className="rounded bg-green-600 px-3 py-1 text-sm text-white disabled:cursor-not-allowed disabled:bg-gray-400"
+                      >
+                        {lead.converted ? "Converted" : "Convert"}
                       </button>
 
                       {/* Delete */}

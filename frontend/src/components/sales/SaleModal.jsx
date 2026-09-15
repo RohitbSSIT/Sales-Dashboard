@@ -8,6 +8,8 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
     proposal: "",
     service: "",
     saleAmount: "",
+    amountPaid: "",
+    remainingAmount: "",
     saleDate: "",
     paymentStatus: "Pending",
     paymentMethod: "Bank Transfer",
@@ -17,7 +19,7 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
 
   const [loading, setLoading] = useState(false);
 
-  // Fill form when editing
+  // Load existing sale when editing
   useEffect(() => {
     if (sale) {
       setFormData({
@@ -27,6 +29,8 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
         proposal: sale.proposal || "",
         service: sale.service || "",
         saleAmount: sale.saleAmount || "",
+        amountPaid: sale.amountPaid || "",
+        remainingAmount: sale.remainingAmount || "",
         saleDate: sale.saleDate || "",
         paymentStatus: sale.paymentStatus || "Pending",
         paymentMethod: sale.paymentMethod || "Bank Transfer",
@@ -44,6 +48,28 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
       ...prev,
       [name]: value,
     }));
+  };
+
+  // Calculate remaining amount
+  const remainingAmount = Math.max(
+    0,
+    Number(formData.saleAmount || 0) - Number(formData.amountPaid || 0),
+  );
+
+  // Calculate payment status automatically
+  const getPaymentStatus = () => {
+    const saleAmount = Number(formData.saleAmount || 0);
+    const amountPaid = Number(formData.amountPaid || 0);
+
+    if (amountPaid === 0) {
+      return "Pending";
+    }
+
+    if (amountPaid >= saleAmount && saleAmount > 0) {
+      return "Paid";
+    }
+
+    return "Partial";
   };
 
   // Submit form
@@ -66,7 +92,18 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
         },
         body: JSON.stringify({
           ...formData,
+
+          // Convert Sale Amount to number
           saleAmount: Number(formData.saleAmount),
+
+          // Convert Amount Paid to number
+          amountPaid: Number(formData.amountPaid),
+
+          // Save calculated Remaining Amount
+          remainingAmount: remainingAmount,
+
+          // Save automatically calculated Payment Status
+          paymentStatus: getPaymentStatus(),
         }),
       });
 
@@ -81,10 +118,7 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
 
       alert(sale ? "Sale updated successfully" : "Sale added successfully");
 
-      // Refresh table
       onSaleAdded();
-
-      // Close modal
       onClose();
     } catch (error) {
       console.error("Error saving sale:", error);
@@ -99,9 +133,15 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
       <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-xl bg-white shadow-xl">
         {/* Header */}
         <div className="flex items-center justify-between border-b px-6 py-4">
-          <h2 className="text-xl font-semibold text-gray-800">
-            {sale ? "Edit Sale" : "Add Sale"}
-          </h2>
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">
+              {sale ? "Edit Sale" : "Add Sale"}
+            </h2>
+
+            <p className="mt-1 text-sm text-gray-500">
+              {sale ? "Update sale information" : "Add a new sale"}
+            </p>
+          </div>
 
           <button
             type="button"
@@ -126,7 +166,7 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
                 name="saleName"
                 value={formData.saleName}
                 onChange={handleChange}
-                placeholder="ABC Website Project"
+                placeholder="Website Development Project"
                 required
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
               />
@@ -160,7 +200,7 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
                 name="opportunity"
                 value={formData.opportunity}
                 onChange={handleChange}
-                placeholder="ABC E-commerce Opportunity"
+                placeholder="E-commerce Website"
                 required
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
               />
@@ -177,7 +217,7 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
                 name="proposal"
                 value={formData.proposal}
                 onChange={handleChange}
-                placeholder="ABC Website Proposal"
+                placeholder="PRO-001"
                 required
                 className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
               />
@@ -230,6 +270,43 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
               />
             </div>
 
+            {/* Amount Paid */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Amount Paid
+              </label>
+
+              <input
+                type="number"
+                name="amountPaid"
+                value={formData.amountPaid}
+                onChange={handleChange}
+                placeholder="150000"
+                min="0"
+                max={formData.saleAmount || undefined}
+                required
+                className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
+              />
+            </div>
+
+            {/* Remaining Amount */}
+            <div>
+              <label className="mb-1 block text-sm font-medium text-gray-700">
+                Remaining Amount
+              </label>
+
+              <input
+                type="number"
+                value={remainingAmount}
+                readOnly
+                className="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-gray-700 outline-none"
+              />
+
+              <p className="mt-1 text-xs text-gray-500">
+                Sale Amount - Amount Paid
+              </p>
+            </div>
+
             {/* Sale Date */}
             <div>
               <label className="mb-1 block text-sm font-medium text-gray-700">
@@ -252,18 +329,16 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
                 Payment Status
               </label>
 
-              <select
-                name="paymentStatus"
-                value={formData.paymentStatus}
-                onChange={handleChange}
-                required
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
-              >
-                <option value="Paid">Paid</option>
-                <option value="Partial">Partial</option>
-                <option value="Pending">Pending</option>
-                <option value="Overdue">Overdue</option>
-              </select>
+              <input
+                type="text"
+                value={getPaymentStatus()}
+                readOnly
+                className="w-full rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-gray-700 outline-none"
+              />
+
+              <p className="mt-1 text-xs text-gray-500">
+                Automatically calculated from payment amount.
+              </p>
             </div>
 
             {/* Payment Method */}
@@ -318,19 +393,20 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
-                placeholder="Add sale notes..."
+                placeholder="Add any additional notes..."
                 rows="4"
-                className="w-full rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
+                className="w-full resize-none rounded-lg border border-gray-300 px-4 py-2 outline-none focus:border-blue-500"
               />
             </div>
           </div>
 
           {/* Buttons */}
-          <div className="mt-6 flex justify-end gap-3">
+          <div className="mt-6 flex justify-end gap-3 border-t pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="cursor-pointer rounded-lg bg-gray-100 px-5 py-2 font-medium text-gray-700 hover:bg-gray-200"
+              disabled={loading}
+              className="cursor-pointer rounded-lg bg-gray-100 px-5 py-2 font-medium text-gray-700 transition hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -338,7 +414,7 @@ function SaleModal({ sale, onClose, onSaleAdded }) {
             <button
               type="submit"
               disabled={loading}
-              className="cursor-pointer rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="cursor-pointer rounded-lg bg-blue-600 px-5 py-2 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {loading ? "Saving..." : sale ? "Update Sale" : "Add Sale"}
             </button>

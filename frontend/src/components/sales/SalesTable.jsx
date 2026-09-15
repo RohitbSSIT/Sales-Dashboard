@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 function SalesTable({
@@ -16,7 +15,6 @@ function SalesTable({
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch sales from backend
   const fetchSales = async () => {
     try {
       setLoading(true);
@@ -35,55 +33,37 @@ function SalesTable({
     }
   };
 
-  // Fetch sales when component loads
-  // or refresh changes
   useEffect(() => {
     fetchSales();
   }, [refresh]);
 
-  // Apply filters
+  // Filter sales
   const filteredSales = sales.filter((sale) => {
     const searchText = search.toLowerCase();
 
-    // Search filter
     const matchesSearch =
-      sale.saleName
-        ?.toLowerCase()
-        .includes(searchText) ||
-      sale.customer
-        ?.toLowerCase()
-        .includes(searchText) ||
-      sale.opportunity
-        ?.toLowerCase()
-        .includes(searchText) ||
-      sale.proposal
-        ?.toLowerCase()
-        .includes(searchText) ||
-      sale.service
-        ?.toLowerCase()
-        .includes(searchText);
+      sale.saleName?.toLowerCase().includes(searchText) ||
+      sale.customer?.toLowerCase().includes(searchText) ||
+      sale.opportunity?.toLowerCase().includes(searchText) ||
+      sale.proposal?.toLowerCase().includes(searchText) ||
+      sale.service?.toLowerCase().includes(searchText);
 
-    // Payment status filter
     const matchesPaymentStatus =
       paymentStatus === "" ||
       sale.paymentStatus === paymentStatus;
 
-    // Payment method filter
     const matchesPaymentMethod =
       paymentMethod === "" ||
       sale.paymentMethod === paymentMethod;
 
-    // Assigned salesperson filter
     const matchesAssignedTo =
       assignedTo === "" ||
       sale.assignedTo === assignedTo;
 
-    // From date filter
     const matchesFromDate =
       fromDate === "" ||
       sale.saleDate >= fromDate;
 
-    // To date filter
     const matchesToDate =
       toDate === "" ||
       sale.saleDate <= toDate;
@@ -101,7 +81,6 @@ function SalesTable({
   return (
     <div className="overflow-hidden rounded-lg bg-white shadow-sm">
       <div className="w-full overflow-x-auto">
-
         <table className="w-full">
 
           {/* Table Header */}
@@ -122,6 +101,14 @@ function SalesTable({
 
               <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
                 Sale Amount
+              </th>
+
+              <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                Amount Paid
+              </th>
+
+              <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
+                Remaining Amount
               </th>
 
               <th className="whitespace-nowrap px-6 py-4 text-left text-sm font-semibold text-gray-700">
@@ -150,7 +137,7 @@ function SalesTable({
             {loading ? (
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="10"
                   className="px-6 py-10 text-center text-sm text-gray-500"
                 >
                   Loading sales...
@@ -158,7 +145,7 @@ function SalesTable({
               </tr>
             ) : filteredSales.length > 0 ? (
 
-              /* Sales List */
+              /* Sales Data */
               filteredSales.map((sale) => (
                 <tr
                   key={sale._id}
@@ -200,6 +187,22 @@ function SalesTable({
                     ).toLocaleString("en-IN")}
                   </td>
 
+                  {/* Amount Paid */}
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-green-600">
+                    ₹
+                    {Number(
+                      sale.amountPaid || 0
+                    ).toLocaleString("en-IN")}
+                  </td>
+
+                  {/* Remaining Amount */}
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-red-600">
+                    ₹
+                    {Number(
+                      sale.remainingAmount || 0
+                    ).toLocaleString("en-IN")}
+                  </td>
+
                   {/* Sale Date */}
                   <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-600">
                     {sale.saleDate}
@@ -237,10 +240,8 @@ function SalesTable({
 
                   {/* Actions */}
                   <td className="px-6 py-4">
-
                     <div className="flex gap-2">
 
-                      {/* View */}
                       <button
                         type="button"
                         onClick={() => onView(sale)}
@@ -249,7 +250,6 @@ function SalesTable({
                         View
                       </button>
 
-                      {/* Edit */}
                       <button
                         type="button"
                         onClick={() => onEdit(sale)}
@@ -258,7 +258,6 @@ function SalesTable({
                         Edit
                       </button>
 
-                      {/* Delete */}
                       <button
                         type="button"
                         onClick={() => onDelete(sale)}
@@ -268,7 +267,6 @@ function SalesTable({
                       </button>
 
                     </div>
-
                   </td>
 
                 </tr>
@@ -276,10 +274,10 @@ function SalesTable({
 
             ) : (
 
-              /* No Data */
+              /* No Sales */
               <tr>
                 <td
-                  colSpan="8"
+                  colSpan="10"
                   className="px-6 py-10 text-center"
                 >
                   <p className="text-sm font-medium text-gray-700">
@@ -295,13 +293,10 @@ function SalesTable({
             )}
 
           </tbody>
-
         </table>
-
       </div>
     </div>
   );
 }
 
 export default SalesTable;
-

@@ -28,6 +28,33 @@ function Leads() {
     setIsDetailsOpen(true);
   };
 
+
+  const handleConvert = async (leadId) => {
+  try {
+    const response = await fetch(
+      `http://127.0.0.1:8000/leads/${leadId}/convert`,
+      {
+        method: "POST",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      alert(data.detail || "Failed to convert lead");
+      return;
+    }
+
+    alert("Lead converted successfully");
+
+    // Refresh the leads table
+    setRefresh((prev) => !prev);
+  } catch (error) {
+    console.error("Error converting lead:", error);
+    alert("Something went wrong");
+  }
+};
+
   return (
     <div className="p-6">
       <LeadsHeader
@@ -53,6 +80,7 @@ function Leads() {
         onView={handleViewLead}
         search={search}
         status={status}
+        onConvert={handleConvert}
         source={source}
       />
 

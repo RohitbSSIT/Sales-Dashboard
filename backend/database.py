@@ -20,4 +20,6 @@ proposals_collection = db["proposals"]
 
 sales_collection = db["sales"]
 
+tasks_collection = db["tasks"]
+
 print("MongoDB connected successfully")

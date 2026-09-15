@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from bson import ObjectId
@@ -8,6 +8,7 @@ from database import (
     opportunities_collection,
     proposals_collection,
     sales_collection,
+    tasks_collection,
 )
 
 app = FastAPI()
@@ -36,6 +37,9 @@ class Lead(BaseModel):
     assignedTo: str
     nextFollowUp: str
     notes: str
+
+    converted: bool = False
+    convertedCustomerId: str | None = None
 
 
 class Customer(BaseModel):
@@ -88,6 +92,20 @@ class Sale(BaseModel):
     paymentMethod: str
     assignedTo: str
     notes: str
+    amountPaid: float
+    remainingAmount: float
+
+
+class Task(BaseModel):
+    taskTitle: str
+    description: str
+    customer: str
+    opportunity: str
+    assignedTo: str
+    priority: str
+    dueDate: str
+    status: str
+    notes: str
 
 
 @app.get("/")
@@ -134,6 +152,64 @@ def delete_lead(lead_id: str):
     result = leads_collection.delete_one({"_id": ObjectId(lead_id)})
 
     return {"message": "Lead deleted successfully"}
+
+
+@app.post("/leads/{lead_id}/convert")
+def convert_lead(lead_id: str):
+
+    # 1. Find the lead
+    lead = leads_collection.find_one({
+        "_id": ObjectId(lead_id)
+    })
+
+    if not lead:
+        raise HTTPException(
+            status_code=404,
+            detail="Lead not found"
+        )
+
+    # 2. Check if already converted
+    if lead.get("converted", False):
+        raise HTTPException(
+            status_code=400,
+            detail="Lead is already converted"
+        )
+
+    # 3. Create customer using lead information
+    customer_data = {
+        "customerName": lead["company"],
+        "contactPerson": lead["contactPerson"],
+        "email": lead["email"],
+        "phone": lead["phone"],
+        "service": lead["service"],
+        "status": "active",
+        "assignedTo": lead["assignedTo"],
+        "notes": lead["notes"],
+    }
+
+    customer_result = customers_collection.insert_one(
+        customer_data
+    )
+
+    # 4. Get newly created customer ID
+    customer_id = str(customer_result.inserted_id)
+
+    # 5. Update the lead
+    leads_collection.update_one(
+        {"_id": ObjectId(lead_id)},
+        {
+            "$set": {
+                "converted": True,
+                "convertedCustomerId": customer_id
+            }
+        }
+    )
+
+    # 6. Return response
+    return {
+        "message": "Lead converted successfully",
+        "customerId": customer_id
+    }
 
 
 @app.post("/customers")
@@ -306,3 +382,47 @@ def delete_sale(sale_id: str):
     sales_collection.delete_one({"_id": ObjectId(sale_id)})
 
     return {"message": "Sale deleted successfully"}
+
+
+@app.get("/tasks")
+def get_tasks():
+    tasks = list(tasks_collection.find())
+
+    for task in tasks:
+        task["_id"] = str(task["_id"])
+
+    return tasks
+
+
+@app.post("/tasks")
+def create_task(task: Task):
+    task_data = task.model_dump()
+
+    result = tasks_collection.insert_one(task_data)
+
+    return {
+        "message": "task saved successfully",
+        "id": str(result.inserted_id),
+    }
+
+
+@app.put("/tasks/{task_id}")
+def update_task(
+    task_id: str,
+    task: Task,
+):
+    task_data = task.model_dump()
+
+    tasks_collection.update_one(
+        {"_id": ObjectId(task_id)},
+        {"$set": task_data},
+    )
+
+    return {"message": "Task updated successfully"}
+
+
+@app.delete("/tasks/{task_id}")
+def delete_task(task_id: str):
+    tasks_collection.delete_one({"_id": ObjectId(task_id)})
+
+    return {"message": "Task deleted successfully"}
